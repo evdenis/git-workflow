@@ -1,0 +1,27 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use feature qw/say/;
+
+use GnuPG;
+use Archive::Extract;
+use Git::Repository;
+
+my $file = $ARGV[0];
+my $dir = $ENV{CURRENT_PROJECT};
+
+my $r = Git::Repository->new($dir);
+$r->run('checkout' => 'master');
+
+{
+   my $output = ($file =~ s/\.(pgp|pgp)$//r);
+   GnuPG->new()->decrypt(ciphretext => $file, output => $output);
+   Archive::Extract->new($output)->extract(to => $dir);
+   unlink $output;
+}
+
+$r->run('commit' => '-a' => '-m update');
+
+
