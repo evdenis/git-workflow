@@ -1,0 +1,37 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use feature qw/say/;
+
+use Git::Repository;
+use Data::Printer;
+
+my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
+
+my %notes;
+foreach ($r->run('notes')) {
+   my @tmp = split / /;
+   $notes{$tmp[1]}{obj} = $tmp[0]
+}
+
+foreach (keys %notes) {
+   $notes{$_}{content} = $r->run('cat-file' => '-p' => $notes{$_}{obj});
+}
+
+
+sub validate_ok
+{
+   $_[0] =~ m/\A\s*+((?<label>[a-fA-F0-9]{7,40}|code_change|partial|not_proven)\s*;\s*)*(?&label);?\s*\Z/
+}
+
+foreach (keys %notes) {
+   if (validate_ok($notes{$_}{content})) {
+      delete $notes{$_}
+   }
+}
+
+say "Not valid:";
+p %notes;
+
