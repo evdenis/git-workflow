@@ -8,20 +8,54 @@ use feature qw/say/;
 use GnuPG;
 use Archive::Extract;
 use Git::Repository;
+use File::Slurp qw/read_file/;
+use FindBin;
+
+BEGIN {
+   eval {
+      require Smart::Comments;
+      Smart::Comments->import();
+   }
+}
+
+
+my %config;
+{
+   foreach(read_file("$FindBin::Bin/.config")) {
+      chomp;
+      my @tmp = split /=/;
+      $config{$tmp[0]} = $tmp[1];
+   }
+}
+
 
 my $file = $ARGV[0];
-my $dir = $ENV{CURRENT_PROJECT};
+my $dir = $config{dir} || $ENV{CURRENT_PROJECT};
 
-my $r = Git::Repository->new($dir);
+die unless -r $file;
+die unless -d $dir;
+
+### GIT CHECKOUT
+my $r = Git::Repository->new(work_tree => $dir);
 $r->run('checkout' => 'master');
 
 {
-   my $output = ($file =~ s/\.(pgp|pgp)$//r);
-   GnuPG->new()->decrypt(ciphretext => $file, output => $output);
-   Archive::Extract->new($output)->extract(to => $dir);
+   my $output = ($file =~ s/\.(pgp|gpg)$//r);
+   die "Wrong file extension" if $file eq $output;
+   ### GNUPG DECRYPTING
+   GnuPG->new()->decrypt(ciphertext => $file, output => $output, passphrase => $config{passphrase});
+   ### ARCHIVE EXTRACTING
+   Archive::Extract->new(archive => $output)->extract(to => $dir) or
+      die "Can't extract";
    unlink $output;
 }
 
-$r->run('commit' => '-a' => '-m update');
+my @time = (localtime)[3,4,5];
+my $date = sprintf('%02d.%02d.%d', $time[0], $time[1] + 1, $time[2] - 100);
+my $msg = "update: $date";
 
+### ADDING parsec/*
+$r->run('add' => 'parsec/*');
+### COMMIT MSG: $msg 
+$r->run('commit' => '-a' => '-m' => $msg);
 
