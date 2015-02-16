@@ -1,0 +1,58 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use feature qw/say/;
+
+use Git::Repository;
+use List::Util qw/any/;
+
+BEGIN {
+   eval {
+      require Smart::Comments;
+      Smart::Comments->import();
+   }
+}
+
+use lib::abs 'lib';
+use Git::WorkFlow::AstraVer::Branch;
+
+
+if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
+   die "$0 <devel|spec>\n"
+}
+
+my $branch = $ARGV[0];
+my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
+my $lbranch = (list_branches_sorted($r, $branch . '-*'))[-1];
+
+my $first_merge;
+foreach my $i ($r->run('rev-list' => '--merges' => $branch)) {
+   my $parents = $r->run(show => '--format=%P' => $i);
+   chomp $parents;
+   my @branches = split ' ', $r->run(branch => '--contains' => (split ' ', $parents)[-1]);
+
+   if (any {$_ eq $lbranch} @branches) {
+      $first_merge = $i
+   } elsif ($first_merge) {
+      last
+   }
+}
+
+unless ($first_merge) {
+   my @log = $r->run(log => '--format=%H|%s' => $branch);
+   foreach(@log) {
+      my ($sha, $msg) = split /\|/;
+      if ($msg =~ /merge/i) {
+         if ($msg =~ /\Q$lbranch\E/i) {
+            $first_merge = $sha
+         } else {
+            last
+         }
+      }
+   }
+}
+
+say $first_merge;
+
