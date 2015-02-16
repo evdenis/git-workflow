@@ -12,7 +12,7 @@ my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
 
 my %notes;
 foreach ($r->run('notes')) {
-   my @tmp = split / /;
+   my @tmp = split ' ';
    $notes{$tmp[1]}{obj} = $tmp[0]
 }
 
