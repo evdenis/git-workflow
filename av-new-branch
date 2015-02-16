@@ -8,6 +8,10 @@ use feature qw/say/;
 use Git::Repository;
 use Getopt::Long::Descriptive;
 
+use lib::abs 'lib';
+use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted parse_branch_version/;
+
+
 BEGIN {
    eval {
       require Smart::Comments;
@@ -38,47 +42,9 @@ my ($conf, $usage) = describe_options(
 print($usage->text), exit if $conf->help;
 
 
-sub query_branch
-{
-   my ($repo, $match) = @_;
-   
-   sort version_sort
-      map {s/^\*?\h++|\h++$//rg}
-         $repo->run('branch' => '--list' => $match)
-}
-
-sub parse_branch_version
-{
-   my $version = substr($_[0], index($_[0], '-') + 1);
-   my $point = index($version, '.');
-   if ($point == -1) {
-      return [0, 0]
-   }
-   my $major   = substr($version, 0, $point);
-   my $minor   = substr($version, $point + 1);
-   $major = 0 unless $major;
-   $minor = 0 unless $minor;
-
-   [$major, $minor]
-}
-
-sub parse_branches_versions
-{
-   map { parse_branch_version $_ } @_
-}
-
-sub version_sort
-{
-   my @v = parse_branches_versions($a, $b);
-
-   $v[0][0] <=> $v[1][0]
-             ||
-   $v[0][1] <=> $v[1][1]
-}
-
 my $r = Git::Repository->new(work_tree => $conf->directory);
 
-my @devel_branches = query_branch($r, 'devel-*');
+my @devel_branches = list_branches_sorted($r, 'devel-*');
 my $latest_devel = $devel_branches[-1];
 my $latest_devel_version = parse_branch_version($latest_devel);
 
