@@ -19,7 +19,7 @@ BEGIN {
 }
 
 use lib::abs 'lib';
-use Git::WorkFlow::AstraVer::Branch;
+use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted check_branch_empty/;
 
 
 my $print = 1;
@@ -30,7 +30,21 @@ if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
 
 my $branch = $ARGV[0];
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
-my $lbranch = (list_branches_sorted($r, $branch . '-*'))[-2];
+my $lbranch;
+my @branches = list_branches_sorted($r, $branch . '-*');
+die "Can't find versioned branches $branch\n"
+   unless @branches;
+
+if (check_branch_empty($r, $branch eq 'devel' ? 'master' : $branches[-1] =~ s/spec/devel/r, $branches[-1])) { # if latest empty, then -2
+   if ($branches[-2]) {
+      $lbranch = $branches[-2]
+   }
+} else { # use -1 and create new branch
+   #$lbranch = $branches[-1];
+   die "You should create new versioned branch $branch first!\n";
+}
+die "Can't determine previous versioned branch of development.\n"
+   unless $lbranch;
 # maybe check for commits in -1 branch?
 ### LATEST BRANCH: $lbranch
 
