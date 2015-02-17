@@ -10,6 +10,7 @@ use List::Util qw/any/;
 use Hash::Ordered;
 use Data::Printer;
 use List::Util qw/first/;
+use YAML::XS qw/LoadFile DumpFile/;
 
 BEGIN {
    eval {
@@ -22,7 +23,8 @@ use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted check_branch_empty/;
 
 
-my $print = 1;
+my $print = 0;
+my $save = 1;
 
 if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
    die "$0 <devel|spec>\n"
@@ -161,8 +163,13 @@ if ($print) {
    exit 0;
 }
 
-#my $iter = $ids->iterator;
-#while (my ($k, $v) = $iter->()) {
-#
-#}
+if ($save) {
+   DumpFile 'save', $ids
+}
+
+__END__
+my $iter = $ids->iterator;
+while (my ($k, $v) = $iter->()) {
+   $r->run('cherry-pick' => )
+}
 
