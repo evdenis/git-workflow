@@ -7,6 +7,7 @@ use feature qw/say/;
 
 use Git::Repository;
 use List::Util qw/any/;
+use Hash::Ordered;
 
 BEGIN {
    eval {
@@ -25,7 +26,9 @@ if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
 
 my $branch = $ARGV[0];
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
-my $lbranch = (list_branches_sorted($r, $branch . '-*'))[-1];
+my $lbranch = (list_branches_sorted($r, $branch . '-*'))[-2];
+# maybe check for commits in -1 branch?
+### LATEST BRANCH: $lbranch
 
 my $first_merge;
 foreach my $i ($r->run('rev-list' => '--merges' => $branch)) {
@@ -54,5 +57,47 @@ unless ($first_merge) {
    }
 }
 
-say $first_merge;
+die "Can't find first merge point for branch $lbranch\n"
+   unless $first_merge;
+
+### COMMITS FOR CHERRYPICKING
+my $ids = Hash::Ordered->new(
+   map {($_, undef)}
+      (
+         $r->run('rev-list' => '--reverse' => $lbranch),
+         $r->run('rev-list' => '--reverse' => $first_merge . '..' . $branch)
+      )
+);
+
+### NOTES PROCESSING
+my %notes;
+foreach ($r->run('notes')) {
+   my @tmp = split ' ';
+   $notes{$tmp[1]}{obj} = $tmp[0]
+}
+foreach (keys %notes) {
+   $notes{$_}{content} = $r->run('cat-file' => '-p' => $notes{$_}{obj});
+}
+foreach (keys %notes) {
+   unless ($notes{$_}{content} =~ m/[a-fA-F0-9]{7,40}/p) {
+      delete $notes{$_}
+   } else {
+      $notes{$_}{attach} = ${^MATCH}
+   }
+}
+
+### ORDER DETERMINATION
+foreach my $sha ($ids->keys) {
+   foreach (keys %notes) {
+      if ($sha =~ /^$notes{$_}{attach}/) {
+         delete $notes{$_}{attach};
+         $notes{$_}{attached} = $_;
+         $ids->set($sha => \$notes{$_})
+      }
+   }
+}
+
+
+use Data::Printer;
+p $ids;
 
