@@ -9,6 +9,7 @@ use Git::Repository;
 use List::Util qw/any/;
 use Hash::Ordered;
 use Data::Printer;
+use List::Util qw/first/;
 
 BEGIN {
    eval {
@@ -106,6 +107,18 @@ foreach (keys %notes) {
             $ids->set($sha => $value);
             delete $notes{$_};
             push @attached, $_;
+         }
+      }
+   }
+
+   $iter = $ids->iterator();
+   while (my ($sha, $value) = $iter->()) {
+      if ($value) {
+         if (@$value > 1) {
+            # sorting
+            my @keys = $ids->keys;
+            my %idx = map { my $v = $_; ( $v, first {$v->{attached} eq $keys[$_]} 0..$#keys) } @$value;
+            $ids->set($sha => [sort {$idx{$a} <=> $idx{$b}} @$value])
          }
       }
    }
