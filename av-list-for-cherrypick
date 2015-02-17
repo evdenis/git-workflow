@@ -173,9 +173,14 @@ if ($save) {
    DumpFile 'save', $ids
 }
 
-__END__
+$r->run(checkout => $nbranch);
 my $iter = $ids->iterator;
 while (my ($k, $v) = $iter->()) {
-   $r->run('cherry-pick' => )
+   $r->run('cherry-pick' => $k);
+   if ($v) {
+      foreach(@$v) {
+         $r->run('cherry-pick' => $_->{attached})
+      }
+   }
 }
 
