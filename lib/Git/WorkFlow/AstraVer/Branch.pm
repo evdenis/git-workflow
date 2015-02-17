@@ -4,9 +4,10 @@ use warnings;
 use strict;
 
 use Exporter qw/import/;
+use Carp;
 
 our @EXPORT = qw/list_branches_sorted/;
-our @EXPORT_OK = qw/list_branches list_branches_sorted parse_branch_version parse_branches_versions version_sort/;
+our @EXPORT_OK = qw/list_branches list_branches_sorted parse_branch_version parse_branches_versions version_sort check_branch_empty/;
 
 sub parse_branch_version
 {
@@ -50,5 +51,17 @@ sub list_branches_sorted
    sort version_sort list_branches(@_)
 }
 
+sub check_branch_empty
+{
+   my ($r, $parent, $branch) = @_;
+
+   my $sha = $r->run('merge-base' => '--fork-point' => $parent => $branch);
+   if ($sha) {
+      my @commits = $r->run('rev-list' => "$sha..$branch");
+      return @commits ? 0 : 1;
+   } else {
+      croak "$branch is not a fork of $parent"
+   }
+}
 
 1;
