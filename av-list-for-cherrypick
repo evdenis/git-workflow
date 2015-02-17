@@ -83,13 +83,17 @@ die "Can't find first merge point for branch $lbranch\n"
    unless $first_merge;
 
 ### COMMITS FOR CHERRYPICKING
-my $ids = Hash::Ordered->new(
-   map {($_, undef)}
-      (
-         $r->run('rev-list' => '--reverse' => $lbranch),
-         $r->run('rev-list' => '--reverse' => $first_merge . '..' . $branch)
-      )
-);
+my $ids;
+{
+   my $fp = $branch eq 'devel' ? 'master' : ($lbranch =~ s/^spec/devel/r);
+   $ids = Hash::Ordered->new(
+      map {($_, undef)}
+         (
+            $r->run('rev-list' => '--reverse' => $fp . '..' . $lbranch),
+            $r->run('rev-list' => '--reverse' => $first_merge . '..' . $branch)
+         )
+   );
+}
 
 ### NOTES PROCESSING
 my %notes;
