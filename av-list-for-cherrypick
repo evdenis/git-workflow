@@ -8,6 +8,7 @@ use feature qw/say/;
 use Git::Repository;
 use List::Util qw/any/;
 use Hash::Ordered;
+use Data::Printer;
 
 BEGIN {
    eval {
@@ -19,6 +20,8 @@ BEGIN {
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Branch;
 
+
+my $print = 1;
 
 if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
    die "$0 <devel|spec>\n"
@@ -79,25 +82,60 @@ foreach (keys %notes) {
    $notes{$_}{content} = $r->run('cat-file' => '-p' => $notes{$_}{obj});
 }
 foreach (keys %notes) {
-   unless ($notes{$_}{content} =~ m/[a-fA-F0-9]{7,40}/p) {
-      delete $notes{$_}
-   } else {
+   if ($notes{$_}{content} =~ m/[a-fA-F0-9]{7,40}/p) {
       $notes{$_}{attach} = ${^MATCH}
+   } else {
+      delete $notes{$_}
    }
 }
 
 ### ORDER DETERMINATION
-foreach my $sha ($ids->keys) {
-   foreach (keys %notes) {
-      if ($sha =~ /^$notes{$_}{attach}/) {
-         delete $notes{$_}{attach};
-         $notes{$_}{attached} = $_;
-         $ids->set($sha => \$notes{$_})
+{
+   my @attached;
+   my $iter = $ids->iterator();
+   while (my ($sha, $value) = $iter->()) {
+      foreach (keys %notes) {
+         if ($notes{$_}{attach} && $sha =~ /^$notes{$_}{attach}/) {
+            delete $notes{$_}{attach};
+            my $nvalue = { %{$notes{$_}}, attached => $_ };
+            if ($value) {
+               push $value, $nvalue
+            } else {
+               $value = [ $nvalue ]
+            }
+            $ids->set($sha => $value);
+            delete $notes{$_};
+            push @attached, $_;
+         }
       }
+   }
+
+   foreach (@attached) {
+      $ids->delete($_) # Existance is guaranted
    }
 }
 
+if (%notes) {
+   print STDERR "Dangling notes:\n";
+   p %notes;
+   die "\n";
+}
 
-use Data::Printer;
-p $ids;
+if ($print) {
+   my $iter = $ids->iterator;
+   while (my ($k, $v) = $iter->()) {
+      unless ($v) {
+         print "$k\n"
+      } else {
+         my %elem = ($k, $v);
+         p %elem;
+      }
+   }
+   exit 0;
+}
+
+#my $iter = $ids->iterator;
+#while (my ($k, $v) = $iter->()) {
+#
+#}
 
