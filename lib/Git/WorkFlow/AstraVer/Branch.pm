@@ -11,11 +11,18 @@ our @EXPORT_OK = qw/list_branches list_branches_sorted parse_branch_version pars
 
 sub parse_branch_version
 {
-   my $version = substr($_[0], index($_[0], '-') + 1);
+   croak "Invalid argument: (null)."
+      unless $_[0];
+
+   my $dash = index($_[0], '-');
+   croak "Invalid argument: dash between number and name required."
+      if $dash == -1;
+
+   my $version = substr($_[0], $dash + 1);
    my $point = index($version, '.');
-   if ($point == -1) {
-      return [0, 0]
-   }
+   croak "Invalid argument: point between major and minor version requireed."
+      if $point == -1;
+
    my $major   = substr($version, 0, $point);
    my $minor   = substr($version, $point + 1);
    $major = 0 unless $major;
