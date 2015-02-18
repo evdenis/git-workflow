@@ -101,9 +101,17 @@ sub new
    bless \%notes, __PACKAGE__
 }
 
-sub refs
+sub iterator
 {
-   keys $_[0]
+   my @keys = keys %{$_[0]};
+   return sub {
+      return shift @keys
+   };
+}
+
+sub delete
+{
+   delete $_[0]->{$_[1]}
 }
 
 sub exists
