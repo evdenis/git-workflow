@@ -176,11 +176,13 @@ if ($save) {
 $r->run(checkout => $nbranch);
 my $iter = $ids->iterator;
 while (my ($k, $v) = $iter->()) {
-   $r->run('cherry-pick' => $k);
    if ($v) {
+      $r->run('cherry-pick' => '--no-commit' => $k);
       foreach(@$v) {
-         $r->run('cherry-pick' => $_->{attached})
+         $r->run('cherry-pick' => '--no-commit' => $_->{attached})
       }
+   } else {
+      $r->run('cherry-pick' => $k);
    }
 }
 
