@@ -37,7 +37,7 @@ my @branches = list_branches_sorted($r, $branch . '-*');
 die "Can't find versioned branches $branch\n"
    unless @branches;
 
-if (check_branch_empty($r, $branch eq 'devel' ? 'master' : $branches[-1] =~ s/^spec/devel/r, $branches[-1])) { # if latest empty, then -2
+if (check_branch_empty($r, $branch eq 'devel' ? 'master' : $branches[-1] =~ s/\Aspec/devel/r, $branches[-1])) { # if latest empty, then -2
    if ($branches[-2]) {
       $lbranch = $branches[-2]
    }
