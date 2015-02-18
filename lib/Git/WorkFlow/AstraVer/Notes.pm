@@ -25,6 +25,8 @@ sub _summarize_tags
    }
 
    @plus = keys %plus;
+   my %hash;
+   @minus = grep {!$hash{$_}++} @minus; #uniq minus
 
    [[@plus], [@minus]]
 }
