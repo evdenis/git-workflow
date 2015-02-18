@@ -45,7 +45,12 @@ print($usage->text), exit if $conf->help;
 my $r = Git::Repository->new(work_tree => $conf->directory);
 
 my @devel_branches = list_branches_sorted($r, 'devel-*');
+### DEVEL BRANCHES: @devel_branches
+die "Can't find versioned devel branches.\n"
+   unless @devel_branches;
+
 my $latest_devel = $devel_branches[-1];
+### LATEST DEVEL: $latest_devel
 my $latest_devel_version = parse_branch_version($latest_devel);
 
 if ($conf->branch eq 'devel') {
@@ -59,16 +64,14 @@ if ($conf->branch eq 'devel') {
       ++$latest_devel_version->[1]
    }
    my $new_devel = 'devel-' . join('.', @$latest_devel_version);
-   ### NEW BRANCH: $new_devel
-   ### CHECKOUT: $new_devel
+   ### NEW BRANCH && CHECKOUT: $new_devel
    $r->run(checkout => '-b' => $new_devel);
 } elsif ($conf->branch eq 'spec') {
    ### CHECKOUT: $latest_devel
    $r->run(checkout => $latest_devel);
 
    my $new_spec = 'spec-' . join('.', @$latest_devel_version);
-   ### NEW BRANCH: $new_spec
-   ### CHECKOUT: $new_spec
+   ### NEW BRANCH && CHECKOUT: $new_spec
    $r->run(checkout => '-b' => $new_spec);
 }
 
