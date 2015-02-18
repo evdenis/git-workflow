@@ -115,34 +115,42 @@ my $notes = Git::WorkFlow::AstraVer::Notes->new($r);
             } else {
                $value = [ $nvalue ]
             }
-            $ids->set($sha => $value);
+            $ids->set($sha => { updates => $value });
             $notes->delete($nsha);
             push @attached, $nsha;
          }
       }
    }
 
+   # updates sorting
    $iter = $ids->iterator();
    while (my ($sha, $value) = $iter->()) {
       if ($value) {
-         if (@$value > 1) {
+         if (exists $value->{updates} && @{$value->{updates}} > 1) {
             # sorting
             my @keys = $ids->keys;
-            my %idx = map { my $v = $_; ( $v, first {$v->{attached} eq $keys[$_]} 0..$#keys) } @$value;
-            $ids->set($sha => [sort {$idx{$a} <=> $idx{$b}} @$value])
+            my %idx = map { my $v = $_; ( $v, first {$v->{attached} eq $keys[$_]} 0..$#keys) } @{$value->{updates}};
+            $ids->set($sha => { updates => [sort {$idx{$a} <=> $idx{$b}} @{$value->{updates}}] })
          }
       }
    }
 
+   # delete only after updates sorting
    foreach (@attached) {
       $ids->delete($_) # Existance is guaranted
    }
 }
-
-if (%notes) {
-   print STDERR "Dangling notes:\n";
-   p %notes;
-   die "\n";
+{
+   # attach regular notes
+   my $n_iter = $notes->iterator;
+   while (my $sha = $n_iter->()) {
+      my $val = $ids->get($sha);
+      if ($val) {
+         $val->{note} = $notes->get($sha)
+      } else {
+         $ids->set($sha => {note => $notes->get($sha)})
+      }
+   }
 }
 
 if ($print) {
