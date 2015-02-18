@@ -10,13 +10,13 @@ sub _validate_ok
    $_[0] =~ m/\A\s*+((?<label>[a-fA-F0-9]{7,40}|code_change|partial|not_proven)\s*;\s*)*(?&label);?\s*\Z/
 }
 
-sub _summarize_tags
+sub __summarize_tags
 {
-   my %plus = map {$_ => undef} @{$_->[0]};
+   my %plus = map {$_ => undef} @{$_[0]->[0]};
    my @plus;
    my @minus;
 
-   foreach(@{$_->[1]}) {
+   foreach(@{$_[0]->[1]}) {
       if (exists $plus{$_}) {
          delete $plus{$_}
       } else {
@@ -29,6 +29,31 @@ sub _summarize_tags
    @minus = grep {!$hash{$_}++} @minus; #uniq minus
 
    [[@plus], [@minus]]
+}
+
+sub _summarize_tags
+{
+   my ($v1, $v2) = @_;
+   my @plus  = @{ $v1->[0] };
+   my @minus = @{ $v1->[1] };
+
+   push @plus, @{ $v2->[0] };
+   push @minus, @{ $v2->[1] };
+
+   __summarize_tags [\@plus, \@minus]
+}
+
+sub summarize_tags
+{
+   my ($self, $ref1, $ref2) = @_;
+
+   croak "Wrong refs"
+      unless exists $self->{$ref1} && exists $self->{$ref2};
+   croak "Refs are identical"
+      if $ref1 eq $ref2;
+
+   $self->{$ref1}{tags} =
+      _summarize_tags $self->{$ref1}{tags}, $self->{$ref2}{tags};
 }
 
 sub _parse_tags
