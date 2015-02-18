@@ -32,14 +32,14 @@ sub _summarize_tags
 sub _parse_tags
 {
    my $s = $_[0];
-   $s = s/\s++//g; 
+   $s =~ s/\s++//g;
 
    my @plus;
    my @minus;
 
    foreach(split /;/, $s) {
       next
-         if $_ =~ m/^[a-fA-F0-9]{7,40}$/;
+         if $_ =~ m/\A[a-fA-F0-9]{7,40}\z/;
       if ($_ =~ s/\A-//) {
          push @minus, $_
       } else {
@@ -60,7 +60,7 @@ sub new
       $notes{$tmp[1]}{obj} = $tmp[0]
    }
    foreach (keys %notes) {
-      $notes{$_}{content} = $r->run('cat-file' => '-p' => $notes{$_}{obj});
+      $notes{$_}{content} = $git->run('cat-file' => '-p' => $notes{$_}{obj});
       croak "Improper format of notes." 
          unless _validate_ok $notes{$_}{content};
    }
