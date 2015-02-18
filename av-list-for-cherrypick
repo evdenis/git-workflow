@@ -21,6 +21,7 @@ BEGIN {
 
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted check_branch_empty/;
+use Git::WorkFlow::AstraVer::Notes;
 
 
 my $print = 0;
@@ -96,39 +97,27 @@ my $ids;
 }
 
 ### NOTES PROCESSING
-my %notes;
-foreach ($r->run('notes')) {
-   my @tmp = split ' ';
-   $notes{$tmp[1]}{obj} = $tmp[0]
-}
-foreach (keys %notes) {
-   $notes{$_}{content} = $r->run('cat-file' => '-p' => $notes{$_}{obj});
-}
-foreach (keys %notes) {
-   if ($notes{$_}{content} =~ m/[a-fA-F0-9]{7,40}/p) {
-      $notes{$_}{attach} = ${^MATCH}
-   } else {
-      delete $notes{$_}
-   }
-}
+my $notes = Git::WorkFlow::AstraVer::Notes->new($r);
 
 ### ORDER DETERMINATION
 {
    my @attached;
    my $iter = $ids->iterator();
    while (my ($sha, $value) = $iter->()) {
-      foreach (keys %notes) {
-         if ($notes{$_}{attach} && $sha =~ /^$notes{$_}{attach}/) {
-            delete $notes{$_}{attach};
-            my $nvalue = { %{$notes{$_}}, attached => $_ };
+      my $iter = $notes->iterator;
+      while (my $nsha = $iter->()) {
+         my $note = $notes->get($nsha);
+         if ($note->{attach} && $sha =~ /\A$note->{attach}/) {
+            delete $note->{attach};
+            my $nvalue = { %$note, attached => $nsha };
             if ($value) {
                push $value, $nvalue
             } else {
                $value = [ $nvalue ]
             }
             $ids->set($sha => $value);
-            delete $notes{$_};
-            push @attached, $_;
+            $notes->delete($nsha);
+            push @attached, $nsha;
          }
       }
    }
