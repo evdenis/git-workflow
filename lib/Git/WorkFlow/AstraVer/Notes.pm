@@ -95,6 +95,7 @@ sub new
       if ($notes{$_}{content} =~ m/[a-fA-F0-9]{7,40}/p) {
          $notes{$_}{attach} = ${^MATCH}
       }
+      $notes{$_}{tags} = _parse_tags $notes{$_}{content};
    }
 
    bless \%notes, __PACKAGE__
