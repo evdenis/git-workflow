@@ -22,7 +22,7 @@ BEGIN {
 my ($conf, $usage) = describe_options(
    "%c %o - create a new branch in repository of specifications",
    ['directory|d=s', 'git repository',  {
-         default => '.',
+         default => $ENV{CURRENT_PROJECT},
          callbacks => {directory => sub { -d shift } }
       }
    ],
