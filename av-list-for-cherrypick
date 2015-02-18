@@ -150,8 +150,16 @@ my $notes = Git::WorkFlow::AstraVer::Notes->new($r);
       } else {
          $ids->set($sha => {note => $notes->get($sha)})
       }
+      $notes->delete($sha);
    }
 }
+
+unless ($notes->empty) {
+   print STDERR "Dangling notes:\n";
+   p $notes;
+   die "\n";
+}
+
 
 if ($print) {
    my $iter = $ids->iterator;
