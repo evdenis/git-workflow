@@ -7,6 +7,8 @@ use feature qw/say/;
 
 use Git::Repository;
 use Data::Printer;
+use lib::abs 'lib';
+use Git::WorkFlow::AstraVer::Notes;
 
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
 
@@ -20,14 +22,8 @@ foreach (keys %notes) {
    $notes{$_}{content} = $r->run('cat-file' => '-p' => $notes{$_}{obj});
 }
 
-
-sub validate_ok
-{
-   $_[0] =~ m/\A\s*+((?<label>[a-fA-F0-9]{7,40}|code_change|partial|not_proven)\s*;\s*)*(?&label);?\s*\Z/
-}
-
 foreach (keys %notes) {
-   if (validate_ok($notes{$_}{content})) {
+   if (Git::WorkFlow::AstraVer::Notes::_validate_ok($notes{$_}{content})) {
       delete $notes{$_}
    }
 }
