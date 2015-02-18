@@ -80,4 +80,15 @@ sub refs
    keys $_[0]
 }
 
+sub exists
+{
+   exists $_[0]->{$_[1]}
+}
+
+sub get
+{
+   $_[0]->{$_[1]}
+}
+
+
 1;
