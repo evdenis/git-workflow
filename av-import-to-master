@@ -11,6 +11,9 @@ use Git::Repository;
 use File::Slurp qw/read_file/;
 use FindBin;
 
+use lib::abs 'lib';
+use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
+
 BEGIN {
    eval {
       require Smart::Comments;
@@ -37,6 +40,11 @@ die unless -d $dir;
 
 ### GIT CHECKOUT
 my $r = Git::Repository->new(work_tree => $dir);
+
+if (check_changes_exist($r)) {
+   die "There are changes in repository. You should commit/remove them first.\n";
+}
+
 $r->run('checkout' => 'master');
 
 {
