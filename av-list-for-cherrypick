@@ -22,6 +22,7 @@ BEGIN {
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted check_branch_empty/;
 use Git::WorkFlow::AstraVer::Notes;
+use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
 
 
 my $print = 0;
@@ -33,6 +34,10 @@ if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
 
 my $branch = $ARGV[0];
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
+if (check_changes_exist($r)) {
+   die "There are changes in repository. You should commit/remove them first.\n";
+}
+
 my ($lbranch, $nbranch);
 my @branches = list_branches_sorted($r, $branch . '-*');
 die "Can't find versioned branches $branch\n"

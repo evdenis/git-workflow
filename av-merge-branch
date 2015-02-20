@@ -10,6 +10,7 @@ use Getopt::Long;
 
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted check_branch_empty/;
+use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
 
 
 BEGIN {
@@ -26,6 +27,9 @@ if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
 
 my $branch = $ARGV[0]; # branch merge into
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
+if (check_changes_exist($r)) {
+   die "There are changes in repository. You should commit/remove them first.\n";
+}
 my @branches = list_branches_sorted($r, $branch . '-*');
 die "Can't find versioned branches $branch\n"
    unless @branches;

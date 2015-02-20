@@ -10,6 +10,7 @@ use Getopt::Long::Descriptive;
 
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted parse_branch_version/;
+use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
 
 
 BEGIN {
@@ -43,6 +44,9 @@ print($usage->text), exit if $conf->help;
 
 
 my $r = Git::Repository->new(work_tree => $conf->directory);
+if (check_changes_exist($r)) {
+   die "There are changes in repository. You should commit/remove them first.\n";
+}
 
 my @devel_branches = list_branches_sorted($r, 'devel-*');
 ### DEVEL BRANCHES: @devel_branches
