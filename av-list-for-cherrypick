@@ -22,6 +22,7 @@ BEGIN {
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted check_branch_empty/;
 use Git::WorkFlow::AstraVer::Notes;
+use Git::WorkFlow::AstraVer::Commit qw/commit_info/;
 use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
 
 
@@ -186,12 +187,34 @@ if ($save) {
 $r->run(checkout => $nbranch);
 my $iter = $ids->iterator;
 while (my ($k, $v) = $iter->()) {
-   if ($v) {
-      $r->run('cherry-pick' => '--no-commit' => $k);
-      foreach(@$v) {
-         $r->run('cherry-pick' => '--no-commit' => $_->{attached})
+   if ($v) { ## NOTES, UPDATES
+      if (exists $v->{updates}) {
+         say '{';
+         my $info = commit_info($r, $k);
+         say "\tCP: $info";
+         $r->run('cherry-pick' => '--no-commit' => $k);
+         foreach(@{$v->{updates}}) {
+            my $info = commit_info($r, $k);
+            say "\tCP: $info";
+            $r->run('cherry-pick' => '--no-commit' => $_->{attached})
+         }
+         # commit HERE
+         # update && merge notes
+         # ...
+         say '}';
+      } else {
+         say '{';
+         my $info = commit_info($r, $k);
+         say "\tCP: $info";
+         $r->run('cherry-pick' => $k);
+         say "\tNOTE: $v->{note}{content}";
+         $r->run('notes' => 'add' => '-C' => $v->{note}{obj});
+         $r->run('notes' => 'remove' => $k);
+         say '}';
       }
-   } else {
+   } else {  ## NO NOTES
+      my $info = commit_info($r, $k);
+      say "CP: $info";
       $r->run('cherry-pick' => $k);
    }
 }
