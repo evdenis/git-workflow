@@ -103,6 +103,18 @@ sub new
       $notes{$_}{tags} = _parse_tags $notes{$_}{content};
    }
 
+=branch
+   foreach (keys %notes) {
+      my $lbranch = ($r->run('branch' => '--contains' => $_) =~ s/\A\*?\h++//r);
+      my $rbranch;
+
+      $rbranch = ($r->run('branch' => '-r' => '--contains' => $_) =~ s/\A\h++//r)
+         unless $lbranch;
+
+      $notes{$_}{branch} = $lbranch || $rbranch;
+   }
+=cut
+
    bless \%notes, __PACKAGE__
 }
 
