@@ -48,6 +48,17 @@ die "Can't determine previous versioned branch of development.\n"
 
 $r->run(checkout => $branch);
 
-#--no-ff
-#--squash
+my $merge_msg = "Merge branch '$lbranch' into $branch";
+my $sha = $r->run('commit-tree' => '-m' => $merge_msg => '-p' => 'HEAD' => '-p' => $lbranch => "$lbranch:");
+$r->run('update-ref' => 'HEAD' => $sha);
+$r->run(qw/reset --hard/);
 #
+#git merge -s ours ref-to-be-merged
+#git diff --binary ref-to-be-merged | git apply -R --index
+#git commit -F .git/COMMIT_EDITMSG --amend
+#
+#git checkout -b tmp origin/upstream
+#git merge -s ours downstream         # ignoring all changes from downstream
+#git checkout downstream
+#git merge tmp                        # fast-forward to tmp HEAD
+#git branch -D tmp                    # deleting tmp
