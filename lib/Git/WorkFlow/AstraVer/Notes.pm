@@ -56,6 +56,11 @@ sub summarize_tags
       _summarize_tags $self->{$ref1}{tags}, $self->{$ref2}{tags};
 }
 
+sub _tags_to_string
+{
+   join('; ', @{$_[0]->[0]}, @{$_[0]->[1]})
+}
+
 sub _parse_tags
 {
    my $s = $_[0];

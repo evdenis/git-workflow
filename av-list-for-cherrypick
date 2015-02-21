@@ -11,6 +11,7 @@ use Hash::Ordered;
 use Data::Printer;
 use List::Util qw/first/;
 use YAML::XS qw/LoadFile DumpFile/;
+use Try::Tiny;
 
 BEGIN {
    eval {
@@ -31,6 +32,11 @@ my $save = 1;
 
 if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
    die "$0 <devel|spec>\n"
+}
+
+sub stop
+{
+   kill 'STOP', $$
 }
 
 my $branch = $ARGV[0];
@@ -191,22 +197,41 @@ while (my ($k, $v) = $iter->()) {
       if (exists $v->{updates}) {
          say '{';
          my $info = commit_info($r, $k);
+         my $t = $v->{note}{content}; # || '';
          say "\tCP: $info";
-         $r->run('cherry-pick' => '--no-commit' => $k);
-         foreach(@{$v->{updates}}) {
-            my $info = commit_info($r, $k);
-            say "\tCP: $info";
-            $r->run('cherry-pick' => '--no-commit' => $_->{attached})
+         try {
+            $r->run('cherry-pick' => $k)
+         } catch {
+            stop
          }
-         # commit HERE
-         # update && merge notes
-         # ...
+         foreach(@{$v->{updates}}) {
+            my $info = commit_info($r, $_->{attached});
+            say "\tCP+: $info";
+            try {
+               $r->run('cherry-pick' => '-m' => $info => '--no-commit' => $_->{attached})
+            } catch {
+               stop
+            }
+            $t = Git::WorkFlow::AstraVer::Notes::_summarize_tags($t, $_->{tags});
+            $r->run('notes' => 'remove' => $_->{attached});
+            $r->run('commit' => '-a' => '--amend');
+         }
+         stop; # for message editing
+
+         my $note = Git::WorkFlow::AstraVer::Notes::_tags_to_string($t);
+         say "\tNOTE: $note";
+         $r->run('notes' => 'add' => '-m' => $note);
+         $r->run('notes' => 'remove' => $k);
          say '}';
       } else {
          say '{';
          my $info = commit_info($r, $k);
          say "\tCP: $info";
-         $r->run('cherry-pick' => $k);
+         try {
+            $r->run('cherry-pick' => $k)
+         } catch {
+            stop
+         }
          say "\tNOTE: $v->{note}{content}";
          $r->run('notes' => 'add' => '-C' => $v->{note}{obj});
          $r->run('notes' => 'remove' => $k);
@@ -215,7 +240,11 @@ while (my ($k, $v) = $iter->()) {
    } else {  ## NO NOTES
       my $info = commit_info($r, $k);
       say "CP: $info";
-      $r->run('cherry-pick' => $k);
+      try {
+         $r->run('cherry-pick' => $k, {fatal => 1})
+      } catch {
+         stop
+      }
    }
 }
 
