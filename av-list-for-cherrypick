@@ -224,9 +224,22 @@ while (my ($k, $v) = $iter->()) {
          }
          stop; # for message editing
 
-         my $note = Git::WorkFlow::AstraVer::Notes::_tags_to_string($t);
-         say "\tNOTE: $note";
-         $r->run('notes' => 'add' => '-m' => $note);
+         my $drop = 0;
+         if (-e 'drop_commit') {
+            $drop = 1;
+            unlink 'drop_commit';
+         }
+
+         unless ($drop) {
+            my $note = Git::WorkFlow::AstraVer::Notes::_tags_to_string($t);
+            if ($note) {
+               say "\tNOTE: $note";
+               $r->run('notes' => 'add' => '-m' => $note);
+            }
+         } else {
+            say "Dropping commit.";
+            $r->run(reset => '--hard' => 'HEAD~1');
+         }
          $r->run('notes' => 'remove' => $k);
          say '}';
       } else {
