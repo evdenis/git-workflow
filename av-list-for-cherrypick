@@ -37,6 +37,11 @@ if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
 
 sub stop
 {
+   if ($_[0]) {
+      say "Stopping for $_[0] at" . (caller)[2]
+   } else {
+      say "Stop at " . (caller)[2]
+   }
    kill 'STOP', $$
 }
 
