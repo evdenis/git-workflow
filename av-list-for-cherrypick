@@ -203,7 +203,7 @@ while (my ($k, $v) = $iter->()) {
       if (exists $v->{updates}) {
          say '{';
          my $info = commit_info($r, $k);
-         my $t = $v->{note}{content} || [[],[]];
+         my $t = $v->{note}{tags} || [[],[]];
          say "\tCP: $info";
          try {
             $r->run('cherry-pick' => $k)
