@@ -45,6 +45,23 @@ sub stop
    kill 'STOP', $$
 }
 
+sub check_drop_command
+{
+   my $drop = 0;
+   if (-e 'drop_commit') {
+      $drop = 1;
+      unlink 'drop_commit'
+   }
+
+   $drop
+}
+
+sub drop_latest_commit
+{
+   say "Dropping latest commit.";
+   $_[0]->run(reset => '--hard' => 'HEAD~1');
+}
+
 my $branch = $ARGV[0];
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
 if (check_changes_exist($r)) {
@@ -224,21 +241,14 @@ while (my ($k, $v) = $iter->()) {
          }
          stop('message editing|commit dropping');
 
-         my $drop = 0;
-         if (-e 'drop_commit') {
-            $drop = 1;
-            unlink 'drop_commit';
-         }
-
-         unless ($drop) {
+         unless (check_drop_command()) {
             my $note = Git::WorkFlow::AstraVer::Notes::_tags_to_string($t);
             if ($note) {
                say "\tNOTE: $note";
                $r->run('notes' => 'add' => '-m' => $note);
             }
          } else {
-            say "Dropping commit.";
-            $r->run(reset => '--hard' => 'HEAD~1');
+            drop_latest_commit($r)
          }
          $r->run('notes' => 'remove' => $k);
          say '}';
