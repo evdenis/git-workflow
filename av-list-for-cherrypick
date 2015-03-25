@@ -208,7 +208,7 @@ while (my ($k, $v) = $iter->()) {
          try {
             $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
-            stop
+            stop('conflict resolution')
          };
          foreach(@{$v->{updates}}) {
             my $info = commit_info($r, $_->{attached});
@@ -216,13 +216,13 @@ while (my ($k, $v) = $iter->()) {
             try {
                $r->run('cherry-pick' => '--no-commit' => $_->{attached}, {fatal => 1})
             } catch {
-               stop
+               stop('conflict resolution')
             };
             $t = Git::WorkFlow::AstraVer::Notes::_summarize_tags($t, $_->{tags});
             $r->run('notes' => 'remove' => $_->{attached});
             $r->run('commit' => '-a' => '--amend' => '-F' => '.git/COMMIT_EDITMSG');
          }
-         stop; # for message editing
+         stop('message editing|commit dropping');
 
          my $drop = 0;
          if (-e 'drop_commit') {
@@ -249,7 +249,7 @@ while (my ($k, $v) = $iter->()) {
          try {
             $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
-            stop
+            stop('conflict resolution')
          };
          say "\tNOTE: $v->{note}{content}";
          $r->run('notes' => 'add' => '-C' => $v->{note}{obj});
@@ -262,7 +262,7 @@ while (my ($k, $v) = $iter->()) {
       try {
          $r->run('cherry-pick' => $k, {fatal => 1})
       } catch {
-         stop
+         stop('conflict resolution')
       };
    }
 }
