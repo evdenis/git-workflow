@@ -25,6 +25,7 @@ if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
    die "$0 <devel|spec>\n"
 }
 
+
 my $branch = $ARGV[0]; # branch merge into
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
 if (check_changes_exist($r)) {
@@ -36,10 +37,10 @@ die "Can't find versioned branches $branch\n"
 
 my $lbranch;
 my $parent_branch = $branch eq 'devel' ?
-                        'master' :
-                        $branches[-1] =~ s/\Aspec/devel/r, $branches[-1];
+                        $branches[-1] :
+                        $branches[-1] =~ s/\Aspec/devel/r;
 
-unless (check_branch_empty($r, $parent_branch)) {
+unless (check_branch_empty($r, $parent_branch, $branch)) {
    $lbranch = $branches[-1]
 }
 
@@ -52,6 +53,8 @@ my $merge_msg = "Merge branch '$lbranch' into $branch";
 my $sha = $r->run('commit-tree' => '-m' => $merge_msg => '-p' => 'HEAD' => '-p' => $lbranch => "$lbranch:");
 $r->run('update-ref' => 'HEAD' => $sha);
 $r->run(qw/reset --hard/);
+say $merge_msg;
+
 #
 #git merge -s ours ref-to-be-merged
 #git diff --binary ref-to-be-merged | git apply -R --index
