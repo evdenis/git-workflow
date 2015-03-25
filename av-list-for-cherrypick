@@ -206,7 +206,7 @@ while (my ($k, $v) = $iter->()) {
          my $t = $v->{note}{tags} || [[],[]];
          say "\tCP: $info";
          try {
-            $r->run('cherry-pick' => $k)
+            $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
             stop
          };
@@ -214,7 +214,7 @@ while (my ($k, $v) = $iter->()) {
             my $info = commit_info($r, $_->{attached});
             say "\tCP+: $info";
             try {
-               $r->run('cherry-pick' => '--no-commit' => $_->{attached})
+               $r->run('cherry-pick' => '--no-commit' => $_->{attached}, {fatal => 1})
             } catch {
                stop
             };
@@ -247,7 +247,7 @@ while (my ($k, $v) = $iter->()) {
          my $info = commit_info($r, $k);
          say "\tCP: $info";
          try {
-            $r->run('cherry-pick' => $k)
+            $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
             stop
          };
