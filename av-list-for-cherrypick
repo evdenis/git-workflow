@@ -26,6 +26,7 @@ use Git::WorkFlow::AstraVer::Notes;
 use Git::WorkFlow::AstraVer::Commit qw/commit_info/;
 use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
 
+$| = 1; #autoflush
 
 my $print = 0;
 my $save = 1;
