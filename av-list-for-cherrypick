@@ -48,9 +48,10 @@ sub stop
 sub check_drop_command
 {
    my $drop = 0;
-   if (-e 'drop_commit') {
+   my $filename = "$ENV{CURRENT_PROJECT}/.git/drop_commit";
+   if (-e $filename) {
       $drop = 1;
-      unlink 'drop_commit'
+      unlink $filename
    }
 
    $drop
