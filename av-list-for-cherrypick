@@ -38,7 +38,7 @@ if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
 sub stop
 {
    if ($_[0]) {
-      say "Stopping for $_[0] at" . (caller)[2]
+      say "Stopping for $_[0] at " . (caller)[2]
    } else {
       say "Stop at " . (caller)[2]
    }
@@ -226,7 +226,11 @@ while (my ($k, $v) = $iter->()) {
          try {
             $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
-            stop('conflict resolution')
+            stop('conflict resolution|commit dropping');
+            if (check_drop_command()) {
+               drop_latest_commit($r);
+               goto FINISH;
+            }
          };
          foreach(@{$v->{updates}}) {
             my $info = commit_info($r, $_->{attached});
@@ -251,19 +255,26 @@ while (my ($k, $v) = $iter->()) {
          } else {
             drop_latest_commit($r)
          }
+FINISH:
          $r->run('notes' => 'remove' => $k);
          say '}';
       } else {
          say '{';
+         my $drop = 0;
          my $info = commit_info($r, $k);
          say "\tCP: $info";
          try {
             $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
-            stop('conflict resolution')
+            stop('conflict resolution|commit dropping');
+            $drop = check_drop_command();
          };
-         say "\tNOTE: $v->{note}{content}";
-         $r->run('notes' => 'add' => '-C' => $v->{note}{obj});
+         unless ($drop) {
+            say "\tNOTE: $v->{note}{content}";
+            $r->run('notes' => 'add' => '-C' => $v->{note}{obj});
+         } else {
+            drop_latest_commit($r)
+         }
          $r->run('notes' => 'remove' => $k);
          say '}';
       }
@@ -273,7 +284,10 @@ while (my ($k, $v) = $iter->()) {
       try {
          $r->run('cherry-pick' => $k, {fatal => 1})
       } catch {
-         stop('conflict resolution')
+         stop('conflict resolution|commit dropping');
+         if (check_drop_command()) {
+            drop_latest_commit($r)
+         }
       };
    }
 }
