@@ -13,6 +13,7 @@ use List::Util qw/first/;
 use YAML::XS qw/LoadFile DumpFile/;
 use Try::Tiny;
 use File::Spec::Functions qw/catdir catfile updir/;
+use Term::ANSIColor qw/:constants :pushpop/;
 
 BEGIN {
    eval {
@@ -244,7 +245,7 @@ while (my ($k, $v) = $iter->()) {
          try {
             $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
-            stop('conflict resolution (first commit)|commit dropping');
+            stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (first commit)|commit dropping' . RESET);
             if (check_drop_command()) {
                drop_latest_commit($r);
                goto FINISH;
@@ -256,13 +257,13 @@ while (my ($k, $v) = $iter->()) {
             try {
                $r->run('cherry-pick' => '--no-commit' => $_->{attached}, {fatal => 1})
             } catch {
-               stop('conflict resolution (update commit)')
+               stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (update commit)' . RESET)
             };
             $t = Git::WorkFlow::AstraVer::Notes::_summarize_tags($t, $_->{tags});
             $r->run('notes' => 'remove' => $_->{attached});
             $r->run('commit' => '-a' => '--amend' => '-F' => '.git/COMMIT_EDITMSG');
          }
-         stop('message editing (final editing)|commit dropping');
+         stop(BOLD PUSHCOLOR GREEN 'message editing' . POPCOLOR . ' (final editing)|commit dropping' . RESET);
 
          unless (check_drop_command()) {
             my $note = Git::WorkFlow::AstraVer::Notes::_tags_to_string($t);
@@ -284,7 +285,7 @@ FINISH:
          try {
             $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
-            stop('conflict resolution (commit with note)|commit dropping');
+            stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (commit with note)|commit dropping' . RESET);
             $drop = check_drop_command();
          };
          unless ($drop) {
@@ -302,7 +303,7 @@ FINISH:
       try {
          $r->run('cherry-pick' => $k, {fatal => 1})
       } catch {
-         stop('conflict resolution (commit only)|commit dropping');
+         stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (commit only)|commit dropping' . RESET);
          if (check_drop_command()) {
             drop_latest_commit($r)
          }
