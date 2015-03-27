@@ -221,10 +221,16 @@ if ($print) {
    my $iter = $ids->iterator;
    while (my ($k, $v) = $iter->()) {
       unless ($v) {
-         print "$k\n"
+         say commit_info($r, $k)
       } else {
-         my %elem = ($k, $v);
-         p %elem;
+         if (exists $v->{updates}) {
+            say commit_info($r, $k);
+            foreach (@{$v->{updates}}) {
+               say "  " . commit_info($r, $_->{attached});
+            }
+         } else {
+            say commit_info($r, $k);
+         }
       }
    }
    exit 0;
