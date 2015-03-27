@@ -203,9 +203,7 @@ my $notes = Git::WorkFlow::AstraVer::Notes->new($r);
       my $val = $ids->get($sha);
       if ($val) {
          $val->{note} = $notes->get($sha)
-      } else {
-         $ids->set($sha => {note => $notes->get($sha)})
-      }
+      } # else - old notes should not be added
       $notes->delete($sha);
    }
 }
