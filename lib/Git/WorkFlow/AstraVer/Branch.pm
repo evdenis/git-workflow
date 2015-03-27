@@ -7,7 +7,7 @@ use Exporter qw/import/;
 use Carp;
 
 our @EXPORT = qw/list_branches_sorted/;
-our @EXPORT_OK = qw/list_branches list_branches_sorted parse_branch_version parse_branches_versions version_sort check_branch_empty/;
+our @EXPORT_OK = qw/list_branches list_branches_sorted parse_branch_version parse_branches_versions version_sort check_branch_empty branch_contains/;
 
 sub parse_branch_version
 {
@@ -45,11 +45,13 @@ sub version_sort
    $v[0][1] <=> $v[1][1]
 }
 
+my $branch_re = qr/^\*?\h++|\h++$/;
+
 sub list_branches
 {
    my ($repo, $match) = @_;
    
-   map {s/^\*?\h++|\h++$//rg}
+   map {s/$branch_re//rg}
       $repo->run('branch' => '--list' => $match)
 }
 
@@ -70,5 +72,12 @@ sub check_branch_empty
       croak "$branch is not a fork of $parent"
    }
 }
+
+sub branch_contains
+{
+   map {s/$branch_re//rg}
+      $_[0]->run(branch => '--contains' => $_[1])
+}
+
 
 1;
