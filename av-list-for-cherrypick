@@ -36,6 +36,9 @@ if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
    die "$0 <devel|spec>\n"
 }
 
+
+say "PID: $$";
+
 sub stop
 {
    if ($_[0]) {
