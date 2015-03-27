@@ -5,6 +5,11 @@ use strict;
 
 use Carp;
 
+sub _note_content
+{
+   $_[0]->run('cat-file' => '-p' => $_[1])
+}
+
 sub _validate_ok
 {
    $_[0] =~ m/\A\s*+((?<label>[a-fA-F0-9]{7,40}|code_change|partial|not_proven)\s*;\s*)*(?&label);?\s*\Z/
