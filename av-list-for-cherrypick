@@ -246,11 +246,7 @@ while (my ($k, $v) = $iter->()) {
          try {
             $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
-            stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (first commit)|commit dropping' . RESET);
-            if (check_drop_command()) {
-               drop_latest_commit($r);
-               goto FINISH;
-            }
+            stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (first commit)' . RESET);
          };
          foreach(@{$v->{updates}}) {
             my $info = commit_info($r, $_->{attached});
@@ -275,7 +271,6 @@ while (my ($k, $v) = $iter->()) {
          } else {
             drop_latest_commit($r)
          }
-FINISH:
          $r->run('notes' => 'remove' => $k);
          say '}';
       } else {
