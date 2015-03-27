@@ -79,6 +79,7 @@ sub check_drop_command
 sub drop_latest_commit
 {
    say "Dropping latest commit.";
+   $_[0]->run('format-patch' => 'HEAD~1');
    $_[0]->run(reset => '--hard' => 'HEAD~1');
 }
 
