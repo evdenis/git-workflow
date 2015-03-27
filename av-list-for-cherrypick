@@ -244,7 +244,7 @@ while (my ($k, $v) = $iter->()) {
          try {
             $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
-            stop('conflict resolution|commit dropping');
+            stop('conflict resolution (first commit)|commit dropping');
             if (check_drop_command()) {
                drop_latest_commit($r);
                goto FINISH;
@@ -256,13 +256,13 @@ while (my ($k, $v) = $iter->()) {
             try {
                $r->run('cherry-pick' => '--no-commit' => $_->{attached}, {fatal => 1})
             } catch {
-               stop('conflict resolution')
+               stop('conflict resolution (update commit)')
             };
             $t = Git::WorkFlow::AstraVer::Notes::_summarize_tags($t, $_->{tags});
             $r->run('notes' => 'remove' => $_->{attached});
             $r->run('commit' => '-a' => '--amend' => '-F' => '.git/COMMIT_EDITMSG');
          }
-         stop('message editing|commit dropping');
+         stop('message editing (final editing)|commit dropping');
 
          unless (check_drop_command()) {
             my $note = Git::WorkFlow::AstraVer::Notes::_tags_to_string($t);
@@ -284,7 +284,7 @@ FINISH:
          try {
             $r->run('cherry-pick' => $k, {fatal => 1})
          } catch {
-            stop('conflict resolution|commit dropping');
+            stop('conflict resolution (commit with note)|commit dropping');
             $drop = check_drop_command();
          };
          unless ($drop) {
@@ -302,7 +302,7 @@ FINISH:
       try {
          $r->run('cherry-pick' => $k, {fatal => 1})
       } catch {
-         stop('conflict resolution|commit dropping');
+         stop('conflict resolution (commit only)|commit dropping');
          if (check_drop_command()) {
             drop_latest_commit($r)
          }
