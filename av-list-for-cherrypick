@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use feature qw/say/;
+use feature qw/say state/;
 
 use Git::Repository;
 use List::Util qw/any/;
@@ -12,6 +12,7 @@ use Data::Printer;
 use List::Util qw/first/;
 use YAML::XS qw/LoadFile DumpFile/;
 use Try::Tiny;
+use File::Spec::Functions qw/catdir catfile updir/;
 
 BEGIN {
    eval {
@@ -48,7 +49,21 @@ sub stop
 sub check_drop_command
 {
    my $drop = 0;
-   my $filename = "$ENV{CURRENT_PROJECT}/.git/drop_commit";
+   state $filename = '';
+
+   unless ($filename) {
+      my $basedir = $ENV{CURRENT_PROJECT};
+      while () {
+         my $gitdir = catdir($basedir, '.git');
+         if ( -d $gitdir ) {
+            $filename = catfile($gitdir, 'drop_commit');
+            last
+         } else {
+            $basedir = catdir($basedir, updir())
+         }
+      }
+   }
+
    if (-e $filename) {
       $drop = 1;
       unlink $filename
