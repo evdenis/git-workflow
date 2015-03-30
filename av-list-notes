@@ -1,0 +1,27 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use feature qw/say/;
+
+use Git::Repository;
+use Data::Printer;
+use lib::abs 'lib';
+use Git::WorkFlow::AstraVer::Notes;
+use Git::WorkFlow::AstraVer::Commit qw/short_commit_info/;
+use Git::WorkFlow::AstraVer::Branch qw/branch_contains list_branches_sorted/;
+use List::Util qw/any/;
+
+my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
+
+my %notes;
+foreach ($r->run('notes')) {
+   my @tmp = split ' ';
+   $notes{$tmp[1]}{content}        = Git::WorkFlow::AstraVer::Notes::_note_content($r, $tmp[0]);
+   $notes{$tmp[1]}{commit_info}    = short_commit_info($r, $tmp[1]);
+   $notes{$tmp[1]}{branch}         = [ branch_contains($r, $tmp[1]) ];
+}
+
+p %notes;
+
