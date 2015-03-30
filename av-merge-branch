@@ -36,11 +36,10 @@ die "Can't find versioned branches $branch\n"
    unless @branches;
 
 my $lbranch;
-my $parent_branch = $branch eq 'devel' ?
-                        $branches[-1] :
-                        $branches[-1] =~ s/\Aspec/devel/r;
+#$branch eq spec|devel
+my $parent_branch = $branch eq 'devel' ? 'master' : $branches[-1] =~ s/\Aspec/devel/r;
 
-unless (check_branch_empty($r, $parent_branch, $branch)) {
+unless (check_branch_empty($r, $parent_branch, $branches[-1])) {
    $lbranch = $branches[-1]
 }
 
