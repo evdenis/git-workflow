@@ -36,9 +36,9 @@ print "LATEST_SPEC: $latest_spec\n";
 my %notes;
 foreach ($r->run('notes')) {
    my @tmp = split ' ';
-   $notes{$tmp[1]}{content} = Git::WorkFlow::AstraVer::Notes::_note_content($r, $tmp[0]);
-   $notes{$tmp[1]}{info}    = short_commit_info($r, $tmp[1]);
-   $notes{$tmp[1]}{branch}  = [ branch_contains($r, $tmp[1]) ];
+   $notes{$tmp[1]}{content}        = Git::WorkFlow::AstraVer::Notes::_note_content($r, $tmp[0]);
+   $notes{$tmp[1]}{commit_info}    = short_commit_info($r, $tmp[1]);
+   $notes{$tmp[1]}{branch}         = [ branch_contains($r, $tmp[1]) ];
 }
 
 foreach (keys %notes) {
