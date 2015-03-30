@@ -224,12 +224,12 @@ if ($print) {
          say commit_info($r, $k)
       } else {
          if (exists $v->{updates}) {
-            say commit_info($r, $k);
+            say commit_info($r, $k) . (( exists $v->{note} )? " NOTE: " . $v->{note}{content} : '');
             foreach (@{$v->{updates}}) {
-               say "  " . commit_info($r, $_->{attached});
+               say "  " . commit_info($r, $_->{attached}) . " NOTE: " . $_->{content}
             }
          } else {
-            say commit_info($r, $k);
+            say commit_info($r, $k) . " NOTE: " . $v->{note}{content}
          }
       }
    }
