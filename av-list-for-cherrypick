@@ -10,7 +10,6 @@ use List::Util qw/any/;
 use Hash::Ordered;
 use Data::Printer;
 use List::Util qw/first/;
-use YAML::XS qw/LoadFile DumpFile/;
 use Try::Tiny;
 use File::Spec::Functions qw/catdir catfile updir/;
 use Term::ANSIColor qw/:constants :pushpop/;
@@ -236,9 +235,6 @@ if ($print) {
    exit 0;
 }
 
-if ($save) {
-   DumpFile 'save', $ids
-}
 
 $r->run(checkout => $nbranch);
 my $iter = $ids->iterator;
