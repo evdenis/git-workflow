@@ -10,6 +10,7 @@ use Archive::Extract;
 use Git::Repository;
 use File::Slurp qw/read_file/;
 use FindBin;
+use IO::Prompter;
 
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
@@ -22,21 +23,30 @@ BEGIN {
 }
 
 
-my %config;
-{
-   foreach(read_file("$FindBin::Bin/.config")) {
-      chomp;
-      my @tmp = split /=/;
-      $config{$tmp[0]} = $tmp[1];
-   }
-}
-
+die "$0 <ciphered archive>\n"
+   unless @ARGV;
 
 my $file = $ARGV[0];
-my $dir = $config{dir} || $ENV{CURRENT_PROJECT};
+my $dir  = $ENV{CURRENT_PROJECT};
 
 die unless -r $file;
 die unless -d $dir;
+
+my $config_file = "$FindBin::Bin/.config";
+
+my %config;
+if (-r $config_file) {
+   my @l = read_file($config_file);
+   if (@l > 1) {
+      die "Wrong format of .config file.\n"
+   } else {
+      $config{passphrase} = $l[0]
+   }
+} else {
+   $config{passphrase} = prompt 'Enter your password:', -echo => '*';
+}
+chomp $config{passphrase};
+
 
 ### GIT CHECKOUT
 my $r = Git::Repository->new(work_tree => $dir);
