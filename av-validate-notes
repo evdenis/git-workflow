@@ -23,7 +23,7 @@ foreach (keys %notes) {
 }
 
 foreach (keys %notes) {
-   if (Git::WorkFlow::AstraVer::Notes::_validate_ok($notes{$_}{content})) {
+   if (Git::WorkFlow::AstraVer::Notes::_validate($r, $notes{$_}{content})) {
       delete $notes{$_}
    }
 }

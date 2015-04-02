@@ -4,15 +4,43 @@ use warnings;
 use strict;
 
 use Carp;
+use Try::Tiny;
 
 sub _note_content
 {
    $_[0]->run('cat-file' => '-p' => $_[1])
 }
 
-sub _validate_ok
+sub _validate
 {
-   $_[0] =~ m/\A\s*+((?<label>[a-fA-F0-9]{7,40}|code_change|partial|not_proven)\s*;\s*)*(?&label);?\s*\Z/
+   my $ok = 1;
+   my $note = $_[1];
+
+   $note =~ s/\s++//g;
+
+   foreach my $t (split /;/, $note) {
+      if ($t =~ m/\A[a-fA-F0-9]{7,40}\z/) {
+         try {
+            $_[0]->run('rev-parse' => '--quiet' => '--verify' => $t, {fatal => 1})
+         } catch {
+            $ok = 0
+         };
+
+         last
+            unless $ok;
+      }
+
+      if (index($t, '-') == 0) {
+         $t = substr $t, 1
+      }
+
+      unless ($t eq 'code_change' || $t eq 'partial' || $t eq 'not_proven') {
+         $ok = 0;
+         last
+      }
+   }
+
+   $ok
 }
 
 sub __summarize_tags
@@ -99,7 +127,7 @@ sub new
    foreach (keys %notes) {
       $notes{$_}{content} = $git->run('cat-file' => '-p' => $notes{$_}{obj});
       croak "Improper format of notes." 
-         unless _validate_ok $notes{$_}{content};
+         unless _validate $git, $notes{$_}{content};
    }
    foreach (keys %notes) {
       if ($notes{$_}{content} =~ m/[a-fA-F0-9]{7,40}/p) {
