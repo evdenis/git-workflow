@@ -11,6 +11,9 @@ use Git::Repository;
 use File::Slurp qw/read_file/;
 use FindBin;
 use Term::ReadKey;
+use File::Find;
+use File::Temp qw/tempdir/;
+use File::Copy::Recursive qw/dirmove/;
 
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
@@ -20,6 +23,16 @@ BEGIN {
       require Smart::Comments;
       Smart::Comments->import();
    }
+}
+
+sub stop
+{
+   if ($_[0]) {
+      say "Stopping for $_[0] at " . (caller)[2]
+   } else {
+      say "Stop at " . (caller)[2]
+   }
+   kill 'STOP', $$
 }
 
 
@@ -67,9 +80,31 @@ $r->run('checkout' => 'master');
    ### GNUPG DECRYPTING
    GnuPG->new()->decrypt(ciphertext => $file, output => $output, passphrase => $config{passphrase});
    ### ARCHIVE EXTRACTING
-   Archive::Extract->new(archive => $output)->extract(to => $dir) or
+   my $extract_dir = tempdir();
+   unless(Archive::Extract->new(archive => $output)->extract(to => $extract_dir)) {
+      unlink $output;
       die "Can't extract";
+   }
    unlink $output;
+   ### MOVING FILES
+   my @broken_links;
+   find(sub { if ( -l $_ && ! -e readlink($_) ) { push @broken_links, $File::Find::name } }, $extract_dir);
+   foreach (@broken_links) {
+      my $rel_name = substr($_, length($extract_dir));
+      warn "Link $rel_name is broken. Skipping ...\n";
+      unlink $_;
+   }
+
+   my @dirs;
+   find(sub { if ( -d $_ && $_ eq 'parsec' ) { push @dirs, $File::Find::name } }, $extract_dir);
+   @dirs = sort {length($a) <=> length($b)} @dirs;
+
+   dirmove(@dirs ? $dirs[-1] : $extract_dir, $dir);
+
+   while(!rmdir($extract_dir)) {
+      print "Can't properly copy extracted files to repo directory. Please, look at $extract_dir\n";
+      stop();
+   }
 }
 
 my @time = (localtime)[3,4,5];
