@@ -10,7 +10,7 @@ use Archive::Extract;
 use Git::Repository;
 use File::Slurp qw/read_file/;
 use FindBin;
-use IO::Prompter;
+use Term::ReadKey;
 
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
@@ -29,7 +29,7 @@ die "$0 <ciphered archive>\n"
 my $file = $ARGV[0];
 my $dir  = $ENV{CURRENT_PROJECT};
 
-die unless -r $file;
+die unless -f $file && -r _;
 die unless -d $dir;
 
 my $config_file = "$FindBin::Bin/.config";
@@ -40,10 +40,14 @@ if (-r $config_file) {
    if (@l > 1) {
       die "Wrong format of .config file.\n"
    } else {
-      $config{passphrase} = $l[0]
+      $config{passphrase} = $l[0];
    }
 } else {
-   $config{passphrase} = prompt 'Enter your password:', -echo => '*';
+   ReadMode('noecho');
+   print 'Enter your password: ';
+   $config{passphrase} = ReadLine(0);
+   print "\n";
+   ReadMode(0);
 }
 chomp $config{passphrase};
 
