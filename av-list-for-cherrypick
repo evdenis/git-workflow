@@ -26,6 +26,7 @@ use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted check_branch_empty/;
 use Git::WorkFlow::AstraVer::Notes;
 use Git::WorkFlow::AstraVer::Commit qw/commit_info/;
 use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
+use Interactive::Background;
 
 $| = 1; #autoflush
 
@@ -39,15 +40,6 @@ if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
 
 say "PID: $$";
 
-sub stop
-{
-   if ($_[0]) {
-      say "Stopping for $_[0] at " . (caller)[2]
-   } else {
-      say "Stop at " . (caller)[2]
-   }
-   kill 'STOP', $$
-}
 
 sub check_drop_command
 {

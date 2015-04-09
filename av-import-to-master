@@ -17,22 +17,13 @@ use File::Copy::Recursive qw/dirmove/;
 
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
+use Interactive::Background;
 
 BEGIN {
    eval {
       require Smart::Comments;
       Smart::Comments->import();
    }
-}
-
-sub stop
-{
-   if ($_[0]) {
-      say "Stopping for $_[0] at " . (caller)[2]
-   } else {
-      say "Stop at " . (caller)[2]
-   }
-   kill 'STOP', $$
 }
 
 
@@ -42,8 +33,10 @@ die "$0 <ciphered archive>\n"
 my $file = $ARGV[0];
 my $dir  = $ENV{CURRENT_PROJECT};
 
-die unless -f $file && -r _;
-die unless -d $dir;
+die("Can't access file $file\n")
+   unless -f $file && -r _;
+die("Can't determine git repository\n")
+   unless -d $dir;
 
 my $config_file = "$FindBin::Bin/.config";
 
@@ -76,14 +69,14 @@ $r->run('checkout' => 'master');
 
 {
    my $output = ($file =~ s/\.(pgp|gpg)$//r);
-   die "Wrong file extension" if $file eq $output;
+   die "Wrong file extension\n" if $file eq $output;
    ### GNUPG DECRYPTING
    GnuPG->new()->decrypt(ciphertext => $file, output => $output, passphrase => $config{passphrase});
    ### ARCHIVE EXTRACTING
    my $extract_dir = tempdir();
    unless(Archive::Extract->new(archive => $output)->extract(to => $extract_dir)) {
       unlink $output;
-      die "Can't extract";
+      die "Can't extract\n";
    }
    unlink $output;
    ### MOVING FILES
