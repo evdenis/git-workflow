@@ -12,4 +12,3 @@ requires 'Term::ReadKey';
 requires 'lib::abs';
 requires 'List::Util';
 requires 'Term::ANSIColor';
-requires 'Try::Tiny';
