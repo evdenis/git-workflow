@@ -275,8 +275,8 @@ while (my ($k, $v) = $iter->()) {
                " (final editing)|commit dropping\n" . RESET);
 
          unless (check_drop_command()) {
-            if (any {$_ eq 'moved_to_devel'} @{$t->[0]}) {
-               stop("PATCH: $info is marked as moved_to_devel and will be removed\n");
+            if (any {$_ eq 'moved_to_devel' || $_ eq 'moved_to_spec'} @{$t->[0]}) {
+               stop("PATCH: $info is marked as moved_to_[devel/spec] and will be removed\n");
                $r->run(reset => '--hard' => 'HEAD~1');
                next
             }
@@ -294,8 +294,8 @@ while (my ($k, $v) = $iter->()) {
          say '{';
          my $drop = 0;
          my $info = commit_info($r, $k);
-         if (any {$_ eq 'moved_to_devel'} @{$v->{note}{tags}[0]}) {
-            stop("PATCH: $info moved_to_devel\n");
+         if (any {$_ eq 'moved_to_devel' || $_ eq 'moved_to_spec'} @{$v->{note}{tags}[0]}) {
+            stop("PATCH: $info moved_to_[devel/spec]\n");
             next
          }
          say "\tCP: $info";
