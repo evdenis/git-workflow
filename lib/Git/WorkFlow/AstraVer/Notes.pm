@@ -34,7 +34,7 @@ sub _validate
          $t = substr $t, 1
       }
 
-      unless ($t eq 'code_change' || $t eq 'partial' || $t eq 'not_proven' || $t eq 'moved_to_devel') {
+      unless ($t eq 'code_change' || $t eq 'partial' || $t eq 'not_proven' || $t eq 'moved_to_devel' || $t eq 'moved_to_spec') {
          $ok = 0;
          last
       }
