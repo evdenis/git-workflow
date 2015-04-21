@@ -250,20 +250,29 @@ while (my ($k, $v) = $iter->()) {
          my $t = $v->{note}{tags} || [[],[]];
          say "\tCP: $info";
          git_cherry_pick($r, ['cherry-pick' => $k], sub {
-               stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (first commit)' . RESET)
+               stop( BOLD PUSHCOLOR RED
+                        'conflict resolution' .
+                     POPCOLOR .
+                     " (first commit)\n" . RESET)
             });
 
          foreach(@{$v->{updates}}) {
             my $info = commit_info($r, $_->{attached});
             say "\tCP+: $info";
             git_cherry_pick($r, ['cherry-pick' => '--no-commit' => $_->{attached}], sub {
-                  stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (update commit)' . RESET)
+                  stop( BOLD PUSHCOLOR RED
+                           'conflict resolution' .
+                        POPCOLOR .
+                        " (update commit)\n" . RESET)
                });
             $t = Git::WorkFlow::AstraVer::Notes::_summarize_tags($t, $_->{tags});
             $r->run('notes' => 'remove' => $_->{attached});
             $r->run('commit' => '-a' => '--amend' => '-F' => '.git/COMMIT_EDITMSG');
          }
-         stop(BOLD PUSHCOLOR GREEN 'message editing' . POPCOLOR . ' (final editing)|commit dropping' . RESET);
+         stop( BOLD PUSHCOLOR GREEN
+                  'message editing' .
+               POPCOLOR .
+               " (final editing)|commit dropping\n" . RESET);
 
          unless (check_drop_command()) {
             my $note = Git::WorkFlow::AstraVer::Notes::_tags_to_string($t);
@@ -282,7 +291,10 @@ while (my ($k, $v) = $iter->()) {
          my $info = commit_info($r, $k);
          say "\tCP: $info";
          git_cherry_pick($r, ['cherry-pick' => $k], sub {
-               stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (commit with note)|commit dropping' . RESET);
+               stop( BOLD PUSHCOLOR RED
+                        'conflict resolution' .
+                     POPCOLOR .
+                     " (commit with note)|commit dropping\n" . RESET);
                $drop = check_drop_command();
             });
          unless ($drop) {
@@ -298,7 +310,10 @@ while (my ($k, $v) = $iter->()) {
       my $info = commit_info($r, $k);
       say "CP: $info";
       git_cherry_pick($r, ['cherry-pick' => $k], sub {
-            stop(BOLD PUSHCOLOR RED 'conflict resolution' . POPCOLOR . ' (commit only)|commit dropping' . RESET);
+            stop( BOLD PUSHCOLOR RED
+                     'conflict resolution' .
+                  POPCOLOR .
+                  " (commit only)|commit dropping\n" . RESET);
             if (check_drop_command()) {
                drop_latest_commit($r)
             }
