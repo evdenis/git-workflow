@@ -243,8 +243,8 @@ if ($print) {
 $r->run(checkout => $nbranch);
 my $iter = $ids->iterator;
 while (my ($k, $v) = $iter->()) {
-   if ($v) { ## NOTES, UPDATES
-      if (exists $v->{updates}) {
+   if ($v) {
+      if (exists $v->{updates}) { ## NOTES, UPDATES
          say '{';
          my $info = commit_info($r, $k);
          my $t = $v->{note}{tags} || [[],[]];
@@ -285,7 +285,7 @@ while (my ($k, $v) = $iter->()) {
          }
          $r->run('notes' => 'remove' => $k);
          say '}';
-      } else {
+      } else { ## NOTES
          say '{';
          my $drop = 0;
          my $info = commit_info($r, $k);
