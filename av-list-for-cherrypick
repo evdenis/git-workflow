@@ -275,6 +275,11 @@ while (my ($k, $v) = $iter->()) {
                " (final editing)|commit dropping\n" . RESET);
 
          unless (check_drop_command()) {
+            if (any {$_ eq 'moved_to_devel'} @{$t->[0]}) {
+               stop("PATCH: $info is marked as moved_to_devel and will be removed\n");
+               $r->run(reset => '--hard' => 'HEAD~1');
+               next
+            }
             my $note = Git::WorkFlow::AstraVer::Notes::_tags_to_string($t);
             if ($note) {
                say "\tNOTE: $note";
@@ -289,6 +294,10 @@ while (my ($k, $v) = $iter->()) {
          say '{';
          my $drop = 0;
          my $info = commit_info($r, $k);
+         if (any {$_ eq 'moved_to_devel'} @{$v->{note}{tags}[0]}) {
+            stop("PATCH: $info moved_to_devel\n");
+            next
+         }
          say "\tCP: $info";
          git_cherry_pick($r, ['cherry-pick' => $k], sub {
                stop( BOLD PUSHCOLOR RED
