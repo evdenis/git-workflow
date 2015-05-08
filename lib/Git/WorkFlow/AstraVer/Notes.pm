@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 use Carp;
-use Try::Tiny;
+use Git::Repository::Command;
 
 sub _note_content
 {
@@ -20,14 +20,16 @@ sub _validate
 
    foreach my $t (split /;/, $note) {
       if ($t =~ m/\A[a-fA-F0-9]{7,40}\z/) {
-         try {
-            $_[0]->run('rev-parse' => '--quiet' => '--verify' => $t, {fatal => 1})
-         } catch {
-            $ok = 0
-         };
+         my $c = Git::Repository::Command->new($_[0], 'rev-parse' => '--quiet' => '--verify' => $t, {fatal => [-128, -129]});
+         $c->final_output();
 
-         last
-            unless $ok;
+         if ($c->exit()) {
+            print "$t FAIL!\n";
+            $ok = 0;
+            last
+         }
+
+         next
       }
 
       if (index($t, '-') == 0) {
