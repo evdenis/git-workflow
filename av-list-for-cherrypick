@@ -25,7 +25,7 @@ use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Branch qw/list_branches_sorted check_branch_empty/;
 use Git::WorkFlow::AstraVer::Notes;
 use Git::WorkFlow::AstraVer::Commit qw/commit_info/;
-use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist/;
+use Git::WorkFlow::AstraVer::Repo qw/check_changes_exist get_git_dir/;
 use Interactive::Background;
 
 $| = 1; #autoflush
@@ -44,20 +44,7 @@ say "PID: $$";
 sub check_drop_command
 {
    my $drop = 0;
-   state $filename = '';
-
-   unless ($filename) {
-      my $basedir = $ENV{CURRENT_PROJECT};
-      while () {
-         my $gitdir = catdir($basedir, '.git');
-         if ( -d $gitdir ) {
-            $filename = catfile($gitdir, 'drop_commit');
-            last
-         } else {
-            $basedir = catdir($basedir, updir())
-         }
-      }
-   }
+   state $filename = catfile(get_git_dir(), 'drop_commit');
 
    if (-e $filename) {
       $drop = 1;
