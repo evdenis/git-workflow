@@ -157,7 +157,7 @@ my $notes = Git::WorkFlow::AstraVer::Notes->new($r);
             delete $note->{attach};
             my $nvalue = { %$note, attached => $nsha };
             if ($value) {
-               push $value, $nvalue
+               push @$value, $nvalue
             } else {
                $value = [ $nvalue ]
             }
