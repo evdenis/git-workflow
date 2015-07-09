@@ -33,9 +33,10 @@ $| = 1; #autoflush
 my $print = 0;
 my $save = 1;
 
-if ((!@ARGV) || (($ARGV[0] ne 'spec') && ($ARGV[0] ne 'devel'))) {
-   die "$0 <devel|spec>\n"
+if ((!@ARGV) || (($ARGV[0] ne '--spec') && ($ARGV[0] ne '--devel'))) {
+   die "$0 <--devel|--spec>\n"
 }
+my $branch = substr $ARGV[0], 2;
 
 
 say "PID: $$";
@@ -73,7 +74,6 @@ sub git_cherry_pick
       if $c->exit();
 }
 
-my $branch = $ARGV[0];
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
 if (check_changes_exist($r)) {
    die "There are changes in repository. You should commit/remove them first.\n";
