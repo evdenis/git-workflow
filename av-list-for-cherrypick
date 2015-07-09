@@ -44,7 +44,7 @@ say "PID: $$";
 sub check_drop_command
 {
    my $drop = 0;
-   state $filename = catfile(get_git_dir(), 'drop_commit');
+   state $filename = catfile(get_git_dir($_[0]), 'drop_commit');
 
    if (-e $filename) {
       $drop = 1;
@@ -261,7 +261,7 @@ while (my ($k, $v) = $iter->()) {
                POPCOLOR .
                " (final editing)|commit dropping\n" . RESET);
 
-         unless (check_drop_command()) {
+         unless (check_drop_command($r)) {
             if (any {$_ eq 'moved_to_devel' || $_ eq 'moved_to_spec'} @{$t->[0]}) {
                stop("PATCH: $info is marked as moved_to_[devel/spec] and will be removed\n");
                $r->run(reset => '--hard' => 'HEAD~1');
@@ -291,7 +291,7 @@ while (my ($k, $v) = $iter->()) {
                         'conflict resolution' .
                      POPCOLOR .
                      " (commit with note)|commit dropping\n" . RESET);
-               $drop = check_drop_command();
+               $drop = check_drop_command($r);
             });
          unless ($drop) {
             say "\tNOTE: $v->{note}{content}";
@@ -310,7 +310,7 @@ while (my ($k, $v) = $iter->()) {
                      'conflict resolution' .
                   POPCOLOR .
                   " (commit only)|commit dropping\n" . RESET);
-            if (check_drop_command()) {
+            if (check_drop_command($r)) {
                drop_latest_commit($r)
             }
          });
