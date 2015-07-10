@@ -14,12 +14,21 @@ use Git::WorkFlow::AstraVer::Branch;
 
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
 
+my $err = 0;
+my @l;
 foreach my $branch ('devel', 'spec') {
    my $last = (list_branches_sorted($r, $branch . '-*'))[-1];
+   push @l, $last;
    my @unmerged = map {s/^\*?\h++|\h++$//rg} $r->run(branch => '--no-merged' => $branch);
 
    if (any {$last eq $_} @unmerged) {
+      $err = 1;
       print "$last is not completely merged to $branch\n"
    }
 }
 
+unless ($err) {
+   print "Branches $l[0] and $l[1] are properly merged.\n"
+} else {
+   exit 1
+}
