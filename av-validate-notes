@@ -9,6 +9,7 @@ use Git::Repository;
 use Data::Printer;
 use lib::abs 'lib';
 use Git::WorkFlow::AstraVer::Notes;
+use Git::WorkFlow::AstraVer::Branch qw/branch_contains/;
 
 my $r = Git::Repository->new(work_tree => $ENV{CURRENT_PROJECT});
 
@@ -20,10 +21,11 @@ foreach ($r->run('notes')) {
 
 foreach (keys %notes) {
    $notes{$_}{content} = $r->run('cat-file' => '-p' => $notes{$_}{obj});
+   $notes{$_}{branch}  = [ branch_contains($r, $_) ];
 }
 
 foreach (keys %notes) {
-   if (Git::WorkFlow::AstraVer::Notes::_validate($r, $notes{$_}{content})) {
+   if (Git::WorkFlow::AstraVer::Notes::_validate($r, $notes{$_}{content}) && @{$notes{$_}{branch}}) {
       delete $notes{$_}
    }
 }

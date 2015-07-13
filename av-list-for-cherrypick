@@ -175,7 +175,10 @@ my $notes = Git::WorkFlow::AstraVer::Notes->new($r);
          if (exists $value->{updates} && @{$value->{updates}} > 1) {
             # sorting
             my @keys = $ids->keys;
-            my %idx = map { my $v = $_; ( $v, first {$v->{attached} eq $keys[$_]} 0..$#keys) } @{$value->{updates}};
+            my %idx = map {
+                           my $v = $_;
+                           ($v, first {$v->{attached} eq $keys[$_]} 0..$#keys)
+                      } @{$value->{updates}};
             $ids->set($sha => { updates => [sort {$idx{$a} <=> $idx{$b}} @{$value->{updates}}] })
          }
       }
