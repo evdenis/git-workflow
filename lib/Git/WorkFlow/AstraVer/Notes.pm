@@ -133,7 +133,7 @@ sub new
    }
    foreach (keys %notes) {
       if ($notes{$_}{content} =~ m/[a-fA-F0-9]{7,40}/p) {
-         $notes{$_}{attach} = ${^MATCH}
+         $notes{$_}{attach} = $git->run('rev-parse' => '--verify' => '--quiet' => ${^MATCH})
       }
       $notes{$_}{tags} = _parse_tags $notes{$_}{content};
    }
