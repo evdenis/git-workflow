@@ -153,6 +153,31 @@ sub new
    bless \%notes, __PACKAGE__
 }
 
+sub search_tag
+{
+   my @objs;
+   my $tag_i = index($_[1], '-') == -1 ? 1 : 0;
+   my @keys = keys %{$_[0]};
+   if ($tag_i) {
+      foreach my $k (@keys) {
+         foreach (@{@{$_[0]{$k}{tags}}[0]}) {
+            push @objs, $k
+               if $_ eq $_[1]
+         }
+      }
+   } else {
+      my $tag = $_[1] =~ s/\A-//r;
+      foreach my $k (@keys) {
+         foreach (@{@{$_[0]{$k}{tags}}[0]}) {
+            push @objs, $k
+               if $_ eq $tag
+         }
+      }
+   }
+
+   @objs
+}
+
 sub iterator
 {
    my @keys = keys %{$_[0]};
