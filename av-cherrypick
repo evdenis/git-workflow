@@ -9,7 +9,6 @@ use Git::Repository;
 use Git::Repository::Command;
 use List::Util qw/any/;
 use Hash::Ordered;
-use Data::Printer;
 use List::Util qw/first/;
 use File::Spec::Functions qw/catdir catfile updir/;
 use Term::ANSIColor qw/:constants :pushpop/;
@@ -177,7 +176,9 @@ my $notes = Git::WorkFlow::AstraVer::Notes->new($r);
             my @keys = $ids->keys;
             my %idx = map {
                            my $v = $_;
-                           ($v, first {$v->{attached} eq $keys[$_]} 0..$#keys)
+                           my $c = first {$v->{attached} eq $keys[$_]} 0..$#keys;
+                           die "Dangling note: $v->{obj}\n" unless defined $c;
+                           ($v, $c)
                       } @{$value->{updates}};
             $ids->set($sha => { updates => [sort {$idx{$a} <=> $idx{$b}} @{$value->{updates}}] })
          }
@@ -201,12 +202,6 @@ my $notes = Git::WorkFlow::AstraVer::Notes->new($r);
       } # else - old notes should not be added
       $notes->delete($sha);
    }
-}
-
-unless ($notes->empty) {
-   print STDERR "Dangling notes:\n";
-   p $notes;
-   die "\n";
 }
 
 
