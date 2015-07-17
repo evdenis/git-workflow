@@ -17,8 +17,9 @@ sub _validate
    my $note = $_[1];
 
    $note =~ s/\s++//g;
+   my @tags = split /;/, $note;
 
-   foreach my $t (split /;/, $note) {
+   foreach my $t (@tags) {
       if ($t =~ m/\A[a-fA-F0-9]{7,40}\z/) {
          my $c = Git::Repository::Command->new($_[0], 'rev-parse' => '--quiet' => '--verify' => $t, {fatal => [-128, -129]});
          $c->final_output();
@@ -37,6 +38,11 @@ sub _validate
       }
 
       unless ($t eq 'code_change' || $t eq 'partial' || $t eq 'not_proven' || $t eq 'moved_to_devel' || $t eq 'moved_to_spec') {
+         $ok = 0;
+         last
+      }
+
+      if ($t eq 'moved_to_devel' || $t eq 'moved_to_spec' && @tags > 1) {
          $ok = 0;
          last
       }
