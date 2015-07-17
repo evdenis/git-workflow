@@ -317,3 +317,13 @@ while (my ($k, $v) = $iter->()) {
    }
 }
 
+{
+   my $moved = 'moved_to_' . ($branch eq 'devel' ? 'spec' : 'devel');
+   my @notes = $notes->search_tag($moved);
+   if (@notes) {
+      print "NOTE $moved:\n";
+      print join("\n", @notes);
+      print "\n";
+   }
+}
+
