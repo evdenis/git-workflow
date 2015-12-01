@@ -1,0 +1,106 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+
+use feature qw/say/;
+
+use lib::abs 'lib';
+use Getopt::Long;
+use Git::Repository;
+use Git::WorkFlow::AstraVer::Notes;
+use Git::WorkFlow::AstraVer::Commit qw/short_commit_info/;
+use Git::WorkFlow::AstraVer::Branch qw/branch_contains list_branches_sorted/;
+use List::Util qw/any/;
+
+use Graph::Directed;
+use Graph::Writer::Dot;
+
+use Data::Printer;
+
+my $dir = $ENV{CURRENT_PROJECT};
+
+my $use_msg = 0;
+my $use_notes = 1;
+GetOptions(
+   "dir=s"    => \$dir,
+   "m|msg!"   => \$use_msg,
+   "n|notes!" => \$use_notes,
+   ) or die("Error in command line arguments\n");
+
+die "Can't open directory $dir\n"
+   unless -d $dir;
+
+
+my $r = Git::Repository->new(work_tree => $dir);
+my $g = Graph::Directed->new();
+my %commits;
+foreach($r->run('log' => '--cherry-pick' => '--format=%h %p [%s]')) {
+   chomp;
+   unless ($_ =~ m/^(?<commit>[a-z0-9]++)\h+(?<parrents>(\h*([a-z0-9]++))*)\h+\[(?<message>.*?)\]$/) {
+      die "Can't parse git output '$_'\n"
+   }
+   my %l = %+;
+   $commits{$l{commit}} = ($l{message} =~ s/#/\\#/r);
+   my @p = split /\h++/, $l{parrents};
+
+   if (@p == 0) {
+      $g->add_vertex($l{commit});
+   } elsif (@p == 1) {
+      $g->add_edge($p[0], $l{commit});
+   } elsif (@p == 2) {
+      $g->add_edge($p[0], $l{commit});
+      $g->add_edge($p[1], $l{commit});
+   } else {
+      die "Can't handle more parents!\n"
+   }
+}
+
+if ($use_notes) {
+   my $notes = Git::WorkFlow::AstraVer::Notes->new($r);
+   foreach(keys %$notes) {
+      if ($notes->{$_}{attach}) {
+         my $csha = substr($_, 0, 7);
+         if ($g->has_vertex($csha)) {
+            my $nsha =substr($notes->{$_}{attach}, 0, 7);
+            if ($g->has_vertex($nsha)) {
+               $g->add_edge($csha, $nsha);
+               $g->set_edge_attribute($csha, $nsha, 'color', 'red');
+            } else {
+               die "Graph doesn't have vertex note points to $nsha\n"
+            }
+         } else {
+            warn "Graph doesn't have vertex $csha\n"
+         }
+      }
+   }
+}
+
+if ($use_msg) {
+   my %count;
+   my $g_msg = Graph::Directed->new();
+   $g_msg->set_graph_attributes($g->get_graph_attributes());
+   foreach($g->vertices) {
+      my $v = $commits{$_};
+      $count{$v} = 1;
+      if ($g_msg->has_vertex($v)) {
+         warn "'$v' vertex already exists\n";
+         $v = $v . '_' . $count{$v};
+         $commits{$_} = $v;
+         $count{$v} += 1;
+      }
+      $g_msg->add_vertex($v);
+      my $attrs = $g->get_vertex_attributes($_);
+      $g_msg->set_vertex_attributes($v, $attrs);
+   }
+   foreach($g->edges) {
+      my @edge = ($commits{$_->[0]}, $commits{$_->[1]});
+      $g_msg->add_edge(@edge);
+      my $attrs = $g->get_edge_attributes(@$_);
+      $g_msg->set_edge_attributes(@edge, $attrs);
+   }
+   $g = $g_msg;
+}
+
+Graph::Writer::Dot->new()->write_graph($g, \*STDOUT);
+
