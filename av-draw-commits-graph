@@ -9,8 +9,6 @@ use lib::abs 'lib';
 use Getopt::Long;
 use Git::Repository;
 use Git::WorkFlow::AstraVer::Notes;
-use Git::WorkFlow::AstraVer::Commit qw/short_commit_info/;
-use Git::WorkFlow::AstraVer::Branch qw/branch_contains list_branches_sorted/;
 use List::Util qw/any/;
 
 use Graph::Directed;
@@ -22,10 +20,12 @@ my $dir = $ENV{CURRENT_PROJECT};
 
 my $use_msg = 0;
 my $use_notes = 1;
+my $use_check_selfedge = 0;
 GetOptions(
    "dir=s"    => \$dir,
    "m|msg!"   => \$use_msg,
    "n|notes!" => \$use_notes,
+   "c|check!" => \$use_check_selfedge,
    ) or die("Error in command line arguments\n");
 
 die "Can't open directory $dir\n"
@@ -82,12 +82,12 @@ if ($use_msg) {
    $g_msg->set_graph_attributes($g->get_graph_attributes());
    foreach($g->vertices) {
       my $v = $commits{$_};
-      $count{$v} = 1;
+      if (!exists $count{$v}) { $count{$v} = 0 };
       if ($g_msg->has_vertex($v)) {
          warn "'$v' vertex already exists\n";
+         $count{$v} += 1;   # увеличили счётчик
          $v = $v . '_' . $count{$v};
-         $commits{$_} = $v;
-         $count{$v} += 1;
+         $commits{$_} = $v; # обновили запись
       }
       $g_msg->add_vertex($v);
       my $attrs = $g->get_vertex_attributes($_);
@@ -102,5 +102,15 @@ if ($use_msg) {
    $g = $g_msg;
 }
 
+if ($use_check_selfedge) {
+   say STDERR "Check for edges from _node_ to _node_:";
+   foreach ($g->edges) {
+      if ($_->[0] eq $_->[1]) {
+         say STDERR $_->[0]
+      }
+   }
+}
+
 Graph::Writer::Dot->new()->write_graph($g, \*STDOUT);
+
 
