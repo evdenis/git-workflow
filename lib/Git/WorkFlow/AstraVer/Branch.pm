@@ -20,7 +20,7 @@ sub parse_branch_version
 
    my $version = substr($_[0], $dash + 1);
    my $point = index($version, '.');
-   croak "Invalid argument: point between major and minor version requireed."
+   croak "Invalid argument: point between major and minor version required."
       if $point == -1;
 
    my $major   = substr($version, 0, $point);
