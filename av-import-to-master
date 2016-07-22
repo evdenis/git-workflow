@@ -85,9 +85,10 @@ $r->run('checkout' => 'master');
 
 {
    my $output = ($file =~ s/\.(pgp|gpg)$//r);
-   die "Wrong file extension\n" if $file eq $output;
-   ### GNUPG DECRYPTING
-   GnuPG->new()->decrypt(ciphertext => $file, output => $output, passphrase => $config{passphrase});
+   if ($file ne $output) {
+      ### GNUPG DECRYPTING
+      GnuPG->new()->decrypt(ciphertext => $file, output => $output, passphrase => $config{passphrase});
+   }
    ### ARCHIVE EXTRACTING
    my $extract_dir = tempdir();
    unless(Archive::Extract->new(archive => $output)->extract(to => $extract_dir)) {
