@@ -1,3 +1,4 @@
+requires 'Archive::Extract';
 requires 'Data::Printer';
 requires 'File::Copy::Recursive';
 requires 'File::Slurp';
