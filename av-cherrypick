@@ -308,7 +308,7 @@ while (my ($k, $v) = $iter->()) {
             stop( BOLD PUSHCOLOR RED
                      'conflict resolution' .
                   POPCOLOR .
-                  " (commit only)|commit dropping\n" . RESET);
+                  " (commit only)|commit dropping `git commit && touch .git/drop_commit`\n" . RESET);
             if (check_drop_command($r)) {
                drop_latest_commit($r)
             }
