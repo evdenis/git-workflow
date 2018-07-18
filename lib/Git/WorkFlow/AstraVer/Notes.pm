@@ -42,7 +42,7 @@ sub _validate
          last
       }
 
-      if ($t eq 'moved_to_devel' || $t eq 'moved_to_spec' && @tags > 1) {
+      if (($t eq 'moved_to_devel' || $t eq 'moved_to_spec') && @tags > 1) {
          $ok = 0;
          last
       }
