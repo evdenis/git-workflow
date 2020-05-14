@@ -50,7 +50,7 @@ my $branch_re = qr/^\*?\h++|\h++$/;
 sub list_branches
 {
    my ($repo, $match) = @_;
-   
+
    map {s/$branch_re//rg}
       $repo->run('branch' => '--list' => $match)
 }
