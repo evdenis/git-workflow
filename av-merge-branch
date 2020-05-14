@@ -35,16 +35,15 @@ my @branches = list_branches_sorted($r, $branch . '-*');
 die "Can't find versioned branches $branch\n"
    unless @branches;
 
-my $lbranch;
-#$branch eq spec|devel
-my $parent_branch = $branch eq 'devel' ? 'master' : $branches[-1] =~ s/\Aspec/devel/r;
-
-unless (check_branch_empty($r, $parent_branch, $branches[-1])) {
-   $lbranch = $branches[-1]
-}
-
+my $lbranch = $branches[-1];
 die "Can't determine previous versioned branch of development.\n"
    unless $lbranch;
+
+my $parent_branch = $branch eq 'devel' ? 'master' : $lbranch =~ s/\Aspec/devel/r;
+
+warn "$lbranch have no commits since $parent_branch\n"
+   if check_branch_empty($r, $parent_branch, $lbranch);
+
 
 $r->run(checkout => $branch);
 
